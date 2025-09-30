@@ -74,8 +74,9 @@ export default function LoginPage() {
     try {
       await login(formData);
       router.push('/dashboard');
-    } catch (err: any) {
-      setValidationErrors([err.message || 'Login failed']);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Login failed';
+      setValidationErrors([errorMessage]);
     } finally {
       setLoading(false);
     }
@@ -99,7 +100,7 @@ export default function LoginPage() {
             Sign in to your RFP Management account
           </p>
           <p className="mt-4 text-sm text-gray-500">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/register" className="font-semibold text-blue-600 hover:text-blue-500 transition-colors">
               Create one here
             </Link>

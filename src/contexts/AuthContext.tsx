@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Verify token is still valid
           const response = await api.get<{message: string; user: User}>('/auth/me');
           setUser(response.data.user);
-        } catch (error) {
+        } catch {
           // Token is invalid, clear storage
           localStorage.removeItem('token');
           localStorage.removeItem('user');
@@ -56,8 +56,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
-    } catch (error: any) {
-      throw new Error(error.response?.data?.detail || 'Login failed');
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Login failed'
+        : 'Login failed';
+      throw new Error(errorMessage);
     }
   };
 
@@ -66,8 +69,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await api.post('/auth/register', data);
       // After registration, automatically log in
       await login({ username: data.username, password: data.password });
-    } catch (error: any) {
-      throw new Error(error.response?.data?.detail || 'Registration failed');
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Registration failed'
+        : 'Registration failed';
+      throw new Error(errorMessage);
     }
   };
 

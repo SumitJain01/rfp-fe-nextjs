@@ -5,6 +5,8 @@
  * to ensure consistent validation across all forms in the application.
  */
 
+// Form data types are defined locally in this file
+
 export interface ValidationResult {
   isValid: boolean;
   errors: string[];
@@ -242,7 +244,20 @@ export const validateConfirmPassword = (password: string, confirmPassword: strin
 /**
  * Full form validation for RFP creation
  */
-export const validateRFPForm = (formData: any): ValidationResult => {
+export interface RFPFormData {
+  title: string;
+  description: string;
+  category: string;
+  budget_min: string;
+  budget_max: string;
+  deadline: string;
+  requirements: string[];
+  evaluation_criteria: string[];
+  terms_and_conditions: string;
+  status: 'draft' | 'published';
+}
+
+export const validateRFPForm = (formData: RFPFormData): ValidationResult => {
   const errors: string[] = [];
   
   // Title validation
@@ -294,7 +309,18 @@ export const validateRFPForm = (formData: any): ValidationResult => {
 /**
  * Full form validation for user registration
  */
-export const validateRegistrationForm = (formData: any): ValidationResult => {
+export interface RegistrationFormData {
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  full_name: string;
+  role: 'buyer' | 'supplier';
+  company_name?: string;
+  phone?: string;
+}
+
+export const validateRegistrationForm = (formData: RegistrationFormData): ValidationResult => {
   const errors: string[] = [];
   
   // Username validation
@@ -326,8 +352,10 @@ export const validateRegistrationForm = (formData: any): ValidationResult => {
   }
   
   // Phone validation (optional)
-  const phoneValidation = validatePhone(formData.phone);
-  if (!phoneValidation.isValid) errors.push(phoneValidation.error!);
+  if (formData.phone) {
+    const phoneValidation = validatePhone(formData.phone);
+    if (!phoneValidation.isValid) errors.push(phoneValidation.error!);
+  }
   
   // Company name validation (optional)
   if (formData.company_name) {
@@ -344,7 +372,12 @@ export const validateRegistrationForm = (formData: any): ValidationResult => {
 /**
  * Full form validation for user login
  */
-export const validateLoginForm = (formData: any): ValidationResult => {
+export interface LoginFormData {
+  username: string;
+  password: string;
+}
+
+export const validateLoginForm = (formData: LoginFormData): ValidationResult => {
   const errors: string[] = [];
   
   // Username validation

@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { FormField } from '@/components/ui/FormField';
 import { FormTextArea } from '@/components/ui/FormTextArea';
 import { ErrorAlert } from '@/components/ui/ErrorAlert';
@@ -17,8 +18,7 @@ import {
   validateDate, 
   validateNumber, 
   validateBudgetRange,
-  validateArray,
-  FieldValidationResult 
+  validateArray
 } from '@/lib/validation';
 
 export default function CreateRFPPage() {
@@ -220,19 +220,26 @@ export default function CreateRFPPage() {
       console.log('RFP created successfully:', response.data);
       
       router.push('/dashboard/rfps');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error creating RFP:', err);
       
       // Handle API validation errors
-      if (err.response?.data?.details) {
-        // Backend validation errors
-        const backendErrors = err.response.data.details.map((detail: any) => 
-          detail.message || `${detail.field}: ${detail.message}`
-        );
-        setValidationErrors(backendErrors);
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosError = err as { response?: { data?: { details?: Array<{ message?: string; field?: string }>; message?: string } }; message?: string };
+        if (axiosError.response?.data?.details) {
+          // Backend validation errors
+          const backendErrors = axiosError.response.data.details.map((detail: { message?: string; field?: string }) => 
+            detail.message || `${detail.field}: ${detail.message}`
+          );
+          setValidationErrors(backendErrors);
+        } else {
+          // General error
+          setValidationErrors([axiosError.response?.data?.message || axiosError.message || 'Failed to create RFP']);
+        }
       } else {
         // General error
-        setValidationErrors([err.response?.data?.message || err.message || 'Failed to create RFP']);
+        const errorMessage = err instanceof Error ? err.message : 'Failed to create RFP';
+        setValidationErrors([errorMessage]);
       }
       
       // Scroll to top to show errors

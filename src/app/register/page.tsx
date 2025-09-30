@@ -139,22 +139,29 @@ export default function RegisterPage() {
     }
 
     try {
-      const { confirmPassword, ...registerData } = formData;
+      const { confirmPassword: _, ...registerData } = formData;
       await register(registerData);
       router.push('/dashboard');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Registration error:', err);
       
       // Handle API validation errors
-      if (err.response?.data?.details) {
-        // Backend validation errors
-        const backendErrors = err.response.data.details.map((detail: any) => 
-          detail.message || `${detail.field}: ${detail.message}`
-        );
-        setValidationErrors(backendErrors);
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosError = err as { response?: { data?: { details?: Array<{ message?: string; field?: string }>; message?: string } }; message?: string };
+        if (axiosError.response?.data?.details) {
+          // Backend validation errors
+          const backendErrors = axiosError.response.data.details.map((detail: { message?: string; field?: string }) => 
+            detail.message || `${detail.field}: ${detail.message}`
+          );
+          setValidationErrors(backendErrors);
+        } else {
+          // General error
+          setValidationErrors([axiosError.response?.data?.message || axiosError.message || 'Registration failed']);
+        }
       } else {
         // General error
-        setValidationErrors([err.message || 'Registration failed']);
+        const errorMessage = err instanceof Error ? err.message : 'Registration failed';
+        setValidationErrors([errorMessage]);
       }
       
       // Scroll to top to show errors
