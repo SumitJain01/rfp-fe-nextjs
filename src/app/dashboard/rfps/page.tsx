@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -13,6 +14,7 @@ import { formatDate, formatCurrency, getStatusColor } from '@/lib/utils';
 
 export default function RFPsPage() {
   const { user } = useAuth();
+  const { success, error: showError } = useToast();
   const [rfps, setRfps] = useState<RFP[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -42,11 +44,13 @@ export default function RFPsPage() {
   const handlePublishRfp = async (rfpId: string) => {
     try {
       await api.post(`/rfps/${rfpId}/publish`);
+      success('RFP Published!', 'Your RFP has been published and is now visible to suppliers.');
       // Refresh the list
       const response = await api.get('/rfps');
       setRfps(response.data.data);
     } catch (error) {
       console.error('Error publishing RFP:', error);
+      showError('Failed to publish RFP', 'There was an error publishing your RFP. Please try again.');
     }
   };
 
@@ -55,9 +59,11 @@ export default function RFPsPage() {
 
     try {
       await api.delete(`/rfps/${rfpId}`);
+      success('RFP Deleted', 'The RFP has been successfully deleted.');
       setRfps(rfps.filter(rfp => rfp.id !== rfpId));
     } catch (error) {
       console.error('Error deleting RFP:', error);
+      showError('Failed to delete RFP', 'There was an error deleting the RFP. Please try again.');
     }
   };
 

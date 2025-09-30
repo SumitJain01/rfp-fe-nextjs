@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -23,6 +24,7 @@ import {
 
 export default function CreateRFPPage() {
   const { user } = useAuth();
+  const { success, error } = useToast();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -219,6 +221,7 @@ export default function CreateRFPPage() {
       const response = await api.post('/rfps', submitData);
       console.log('RFP created successfully:', response.data);
       
+      success('RFP Created Successfully!', 'Your request for proposal has been created and saved.');
       router.push('/dashboard/rfps');
     } catch (err: unknown) {
       console.error('Error creating RFP:', err);
@@ -231,14 +234,18 @@ export default function CreateRFPPage() {
           const backendErrors = axiosError.response.data.details.map((detail: { message?: string; field?: string }) => 
             detail.message || `${detail.field}: ${detail.message}`
           );
+          error('Failed to create RFP', backendErrors.join(', '));
           setValidationErrors(backendErrors);
         } else {
           // General error
-          setValidationErrors([axiosError.response?.data?.message || axiosError.message || 'Failed to create RFP']);
+          const errorMsg = axiosError.response?.data?.message || axiosError.message || 'Failed to create RFP';
+          error('Failed to create RFP', errorMsg);
+          setValidationErrors([errorMsg]);
         }
       } else {
         // General error
         const errorMessage = err instanceof Error ? err.message : 'Failed to create RFP';
+        error('Failed to create RFP', errorMessage);
         setValidationErrors([errorMessage]);
       }
       

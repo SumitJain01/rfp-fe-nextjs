@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import { Button } from '@/components/ui/Button';
 import { FormField } from '@/components/ui/FormField';
 import { ErrorAlert } from '@/components/ui/ErrorAlert';
@@ -36,6 +37,7 @@ export default function RegisterPage() {
   const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const { register } = useAuth();
+  const { success, error } = useToast();
   const router = useRouter();
 
   // Real-time validation function
@@ -141,6 +143,7 @@ export default function RegisterPage() {
     try {
       const { confirmPassword: _, ...registerData } = formData;
       await register(registerData);
+      success('Registration successful!', 'Welcome to the RFP Management System.');
       router.push('/dashboard');
     } catch (err: unknown) {
       console.error('Registration error:', err);
@@ -153,14 +156,18 @@ export default function RegisterPage() {
           const backendErrors = axiosError.response.data.details.map((detail: { message?: string; field?: string }) => 
             detail.message || `${detail.field}: ${detail.message}`
           );
+          error('Registration failed', backendErrors.join(', '));
           setValidationErrors(backendErrors);
         } else {
           // General error
-          setValidationErrors([axiosError.response?.data?.message || axiosError.message || 'Registration failed']);
+          const errorMsg = axiosError.response?.data?.message || axiosError.message || 'Registration failed';
+          error('Registration failed', errorMsg);
+          setValidationErrors([errorMsg]);
         }
       } else {
         // General error
         const errorMessage = err instanceof Error ? err.message : 'Registration failed';
+        error('Registration failed', errorMessage);
         setValidationErrors([errorMessage]);
       }
       

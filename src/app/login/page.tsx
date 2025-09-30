@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import { Button } from '@/components/ui/Button';
 import { FormField } from '@/components/ui/FormField';
 import { ErrorAlert } from '@/components/ui/ErrorAlert';
@@ -21,6 +22,7 @@ export default function LoginPage() {
   const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const { login } = useAuth();
+  const { success, error } = useToast();
   const router = useRouter();
 
   const validateField = (name: string, value: string): string | undefined => {
@@ -73,9 +75,11 @@ export default function LoginPage() {
 
     try {
       await login(formData);
+      success('Login successful!', 'Welcome back to your dashboard.');
       router.push('/dashboard');
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Login failed';
+      error('Login failed', errorMessage);
       setValidationErrors([errorMessage]);
     } finally {
       setLoading(false);
