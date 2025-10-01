@@ -253,12 +253,6 @@ export default function RFPsPage() {
                       
                       {user.role === 'buyer' && user.id === rfp.created_by && (
                         <>
-                          <Link href={`/dashboard/rfps/${rfp.id}/edit`}>
-                            <Button size="sm" variant="outline">
-                              Edit RFP
-                            </Button>
-                          </Link>
-                          
                           {rfp.status === 'draft' && (
                             <>
                               <Button
