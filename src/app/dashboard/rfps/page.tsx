@@ -67,6 +67,19 @@ export default function RFPsPage() {
     }
   };
 
+  const handleStatusUpdate = async (rfpId: string, newStatus: string) => {
+    try {
+      await api.put(`/rfps/${rfpId}`, { status: newStatus });
+      success('Status Updated!', `RFP status has been updated to ${newStatus}.`);
+      // Refresh the list
+      const response = await api.get('/rfps');
+      setRfps(response.data.data);
+    } catch (error) {
+      console.error('Error updating RFP status:', error);
+      showError('Failed to update status', 'There was an error updating the RFP status. Please try again.');
+    }
+  };
+
   if (!user) return null;
 
   return (
@@ -174,9 +187,24 @@ export default function RFPsPage() {
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-lg">{rfp.title}</CardTitle>
-                    <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(rfp.status)}`}>
-                      {rfp.status}
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      {user.role === 'buyer' && user.id === rfp.created_by ? (
+                        <select
+                          value={rfp.status}
+                          onChange={(e) => handleStatusUpdate(rfp.id, e.target.value)}
+                          className={`px-2 py-1 text-xs rounded-full border-0 focus:ring-2 focus:ring-blue-500 ${getStatusColor(rfp.status)}`}
+                        >
+                          <option value="draft">Draft</option>
+                          <option value="published">Published</option>
+                          <option value="closed">Closed</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+                      ) : (
+                        <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(rfp.status)}`}>
+                          {rfp.status}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <CardDescription className="capitalize">
                     {rfp.category.replace('_', ' ')}
@@ -225,6 +253,12 @@ export default function RFPsPage() {
                       
                       {user.role === 'buyer' && user.id === rfp.created_by && (
                         <>
+                          <Link href={`/dashboard/rfps/${rfp.id}/edit`}>
+                            <Button size="sm" variant="outline">
+                              Edit RFP
+                            </Button>
+                          </Link>
+                          
                           {rfp.status === 'draft' && (
                             <>
                               <Button
@@ -234,11 +268,6 @@ export default function RFPsPage() {
                               >
                                 Publish
                               </Button>
-                              <Link href={`/dashboard/rfps/${rfp.id}/edit`}>
-                                <Button size="sm" variant="outline">
-                                  Edit
-                                </Button>
-                              </Link>
                               <Button
                                 size="sm"
                                 variant="destructive"
@@ -248,6 +277,7 @@ export default function RFPsPage() {
                               </Button>
                             </>
                           )}
+                          
                           {rfp.status === 'published' && (
                             <Link href={`/dashboard/responses?rfp_id=${rfp.id}`}>
                               <Button size="sm" variant="outline">
